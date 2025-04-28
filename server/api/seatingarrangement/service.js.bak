@@ -1,0 +1,105 @@
+const pool = require("../../db/connection");
+
+// all seating arrangements
+const getSeatingArrangements = async () => {
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.query("SELECT * FROM seatingarrangement");
+    conn.release();
+    return rows;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+// get seating arrangement by id
+const getSeatingArrangementById = async (SeatingID) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(
+      "SELECT * FROM seatingarrangement WHERE SeatingID = ?",
+      [SeatingID]
+    );
+    conn.release();
+    return rows?.[0] || null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  } finally {
+    conn.release();
+  }
+};
+
+// SeatingID, GuestID, TableID, SeatNumber
+
+// update seating arrangement
+const updateSeatingArrangement = async (seatingArrangement) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(
+      "UPDATE seatingarrangement SET SeatNumber = ?, GuestID = ?, TableID = ? WHERE SeatingID = ?",
+      [
+        seatingArrangement.SeatNumber,
+        seatingArrangement.GuestID,
+        seatingArrangement.TableID,
+        seatingArrangement.SeatingID,
+      ]
+    );
+    if (!rows.changedRows) throw new Error("Seating arrangement not found");
+
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  } finally {
+    conn.release();
+  }
+};
+
+// create a seating arrangement
+const createSeatingArrangement = async (seatingArrangement) => {
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.query(
+      "INSERT INTO seatingarrangement (SeatNumber, GuestID, TableID) VALUES (?, ?, ?)",
+      [
+        seatingArrangement.SeatNumber,
+        seatingArrangement.GuestID,
+        seatingArrangement.TableID,
+      ]
+    );
+    conn.release();
+    return rows;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+// remove seating arrangement
+const removeSeatingArrangement = async (SeatingID) => {
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.query(
+      "DELETE FROM seatingarrangement WHERE SeatingID = ?",
+      [SeatingID]
+    );
+    conn.release();
+    // return boolean
+    return rows.affectedRows > 0;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+module.exports = {
+  getSeatingArrangements,
+  updateSeatingArrangement,
+  createSeatingArrangement,
+  getSeatingArrangementById,
+  removeSeatingArrangement
+};
