@@ -3,6 +3,10 @@ const router = express.Router();
 const controller = require('./controller');
 const authenticateToken = require('../../middleware/auth');
 
+// Public route for guest self-registration - no auth required
+router.post('/public', controller.addPublicGuest);
+
+// Protected routes - require authentication
 router.use(authenticateToken);
 
 router.get('/', controller.getGuests);

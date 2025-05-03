@@ -1,5 +1,41 @@
 const pool = require("../../db/connection");
 
+// Check if event exists
+const checkEventExists = async (eventId) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query("SELECT 1 FROM events WHERE EventID = ?", [eventId]);
+    return rows.length > 0;
+  } catch (error) {
+    console.log(error);
+    return false;
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
+// Get event details for notifications
+const getEventDetails = async (eventId) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(
+      `SELECT e.EventID, e.EventName, e.EventDate, e.Location, e.MaxGuests, u.UserID, u.Username, u.Email 
+       FROM events e 
+       LEFT JOIN users u ON e.UserID = u.UserID 
+       WHERE e.EventID = ?`, 
+      [eventId]
+    );
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
 //get all guests
 const getGuests = async () => {
   try {
@@ -86,5 +122,7 @@ module.exports = {
   addGuest,
   updateGuest,
   deleteGuest,
+  checkEventExists,
+  getEventDetails,
 };
 

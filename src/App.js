@@ -15,6 +15,7 @@ import TableManagementPage from './pages/TableManagementPage';
 import GuestManagementPage from './pages/GuestManagementPage';
 import SeatingArrangementPage from './pages/SeatingArrangementPage';
 import UserManagementPage from './pages/UserManagementPage';
+import PublicGuestRegistrationPage from './pages/PublicGuestRegistrationPage';
 
 // Auth context
 import { AuthProvider } from './context/AuthContext';
@@ -22,73 +23,127 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-      <AuthProvider>
-        <Router>
-          <Navbar />
-          <Container className="mt-4">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route
-                  path="/events"
-                  element={
-                    <ProtectedRoute>
-                      <EventsPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/create-event"
-                  element={
-                    <ProtectedRoute>
-                      <CreateEventPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/halls"
-                  element={
-                    <ProtectedRoute>
-                      <HallSelectionPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/tables/:eventId"
-                  element={
-                    <ProtectedRoute>
-                      <TableManagementPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/guests/:eventId"
-                  element={
-                    <ProtectedRoute>
-                      <GuestManagementPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/seating/:eventId"
-                  element={
-                    <ProtectedRoute>
-                      <SeatingArrangementPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/users"
-                  element={
-                    <ProtectedRoute adminOnly={true}>
-                      <UserManagementPage />
-                    </ProtectedRoute>
-                  }
-              />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Container>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public guest registration route without navbar */}
+          <Route path="/event/:eventId/register" element={<PublicGuestRegistrationPage />} />
+          
+          {/* All other routes with navbar */}
+          <Route path="/" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <HomePage />
+              </Container>
+            </>
+          } />
+          
+          <Route path="/login" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <LoginPage />
+              </Container>
+            </>
+          } />
+          
+          <Route path="/register" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <RegisterPage />
+              </Container>
+            </>
+          } />
+          
+          <Route path="/events" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <EventsPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/create-event" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <CreateEventPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/halls" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <HallSelectionPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/tables/:eventId" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <TableManagementPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/guests/:eventId" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <GuestManagementPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/seating/:eventId" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute>
+                  <SeatingArrangementPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          <Route path="/users" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <ProtectedRoute adminOnly={true}>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              </Container>
+            </>
+          } />
+          
+          {/* Catch all route */}
+          <Route path="*" element={
+            <>
+              <Navbar />
+              <Container className="mt-4">
+                <Navigate to="/" />
+              </Container>
+            </>
+          } />
+        </Routes>
         </Router>
       </AuthProvider>
   );

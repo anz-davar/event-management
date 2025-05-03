@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const HomePage = () => {
+    const { user } = useContext(AuthContext);
+    
     return (
         <div style={{ background: '#fff', width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative' }}>
             <style>{`
@@ -32,14 +35,16 @@ const HomePage = () => {
                 justifyContent: 'center',
                 transition: 'all 0.3s',
             }}>
-                <div style={{ position: 'absolute', top: 36, right: 48, display: 'flex', gap: 20 }}>
-                    <Link to="/login">
-                        <Button variant="outline-light" style={{ borderRadius: 20, padding: '10px 36px', fontWeight: 600, fontSize: '1.15rem' }}>Log In</Button>
-                    </Link>
-                    <Link to="/register">
-                        <Button variant="light" style={{ borderRadius: 20, padding: '10px 36px', fontWeight: 600, fontSize: '1.15rem' }}>Register</Button>
-                    </Link>
-                </div>
+                {!user && (
+                    <div style={{ position: 'absolute', top: 36, right: 48, display: 'flex', gap: 20 }}>
+                        <Link to="/login">
+                            <Button variant="outline-light" style={{ borderRadius: 20, padding: '10px 36px', fontWeight: 600, fontSize: '1.15rem' }}>Log In</Button>
+                        </Link>
+                        <Link to="/register">
+                            <Button variant="light" style={{ borderRadius: 20, padding: '10px 36px', fontWeight: 600, fontSize: '1.15rem' }}>Register</Button>
+                        </Link>
+                    </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                     <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '3.5rem', textAlign: 'center', marginBottom: 0, letterSpacing: '-1px', lineHeight: 1.1 }}>
                         The best event<br />for you

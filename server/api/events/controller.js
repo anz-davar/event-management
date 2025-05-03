@@ -60,6 +60,35 @@ const updateEvent = async (req, res) => {
   }
 };
 
+// Get an event by ID for public access (no auth required)
+const getPublicEventById = async (req, res) => {
+  try {
+    const { EventID } = req.params;
+    if (!EventID) {
+      return res.status(400).json({ success: false, error: "EventID is required" });
+    }
+    const event = await service.getEventById(EventID);
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+    
+    // Return only necessary information for public display
+    // (omit sensitive data if needed)
+    const publicEventData = {
+      EventID: event.EventID,
+      EventName: event.EventName,
+      EventDate: event.EventDate,
+      location: event.Location,
+      MaxGuests: event.MaxGuests
+    };
+    
+    return res.status(200).json({ success: true, data: publicEventData });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to fetch event" });
+  }
+};
+
 // Get an event by ID
 const getEventById = async (req, res) => {
   try {
@@ -102,4 +131,5 @@ module.exports = {
   updateEvent,
   getEventById,
   deleteEvent,
+  getPublicEventById,
 };

@@ -1,5 +1,58 @@
 const service = require("./service");
 
+// Add public guest (self-registration, no auth required)
+const addPublicGuest = async (req, res) => {
+  try {
+    const { EventID, FullName, ContactInfo, Preferences, Restrictions } = req.body;
+    
+    if (!EventID || !FullName) {
+      return res.status(400).json({ success: false, error: "EventID and FullName are required" });
+    }
+    
+    // Verify the event exists before adding a guest
+    const eventExists = await service.checkEventExists(EventID);
+    if (!eventExists) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+    
+    // Get event details to include in notification
+    const eventDetails = await service.getEventDetails(EventID);
+    
+    const result = await service.addGuest({ EventID, FullName, ContactInfo, Preferences, Restrictions });
+    
+    if (result && result.insertId) {
+      // Get the socket.io instance
+      const io = req.app.get('io');
+      
+      // Emit a notification to the event room
+      if (io) {
+        io.to(`event-${EventID}`).emit('guestRegistered', {
+          guest: { 
+            GuestID: result.insertId, 
+            FullName, 
+            ContactInfo,
+            Preferences,
+            Restrictions 
+          },
+          event: eventDetails
+        });
+        
+        console.log(`Notification sent to event-${EventID} room for new guest: ${FullName}`);
+      }
+      
+      return res.status(201).json({ 
+        success: true, 
+        data: { GuestID: result.insertId, EventID, FullName, ContactInfo, Preferences, Restrictions } 
+      });
+    } else {
+      return res.status(500).json({ success: false, error: "Failed to register" });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to register" });
+  }
+};
+
 // Get all guests or guests by eventId
 const getGuests = async (req, res) => {
   try {
@@ -89,4 +142,5 @@ module.exports = {
   addGuest,
   updateGuest,
   deleteGuest,
+  addPublicGuest,
 };

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Table, Button, Form, Modal, Alert, Card } from 'react-bootstrap';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { io } from 'socket.io-client';
 
 const GuestManagementPage = () => {
     const { eventId } = useParams();
@@ -22,6 +25,59 @@ const GuestManagementPage = () => {
     const [preferences, setPreferences] = useState('');
     const [restrictions, setRestrictions] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Socket.io connection
+    const [socket, setSocket] = useState(null);
+    
+    // Set up socket connection
+    useEffect(() => {
+        // Create socket connection
+        const newSocket = io('http://localhost:3005');
+        setSocket(newSocket);
+        
+        // Clean up on unmount
+        return () => {
+            if (newSocket) newSocket.disconnect();
+        };
+    }, []);
+    
+    // Join event room when eventId is available and socket is connected
+    useEffect(() => {
+        if (socket && eventId) {
+            // Join the event room to receive notifications
+            socket.emit('joinEvent', eventId);
+            
+            // Listen for new guest registrations
+            socket.on('guestRegistered', (data) => {
+                const { guest, event: eventData } = data;
+                
+                // Show toast notification
+                toast.success(
+                    <div>
+                        <strong>New Guest Registered!</strong>
+                        <p>{guest.FullName} has registered for your event.</p>
+                    </div>, 
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true
+                    }
+                );
+                
+                // Update the guests list
+                setGuests(prevGuests => [guest, ...prevGuests]);
+            });
+            
+            // Clean up listener when component unmounts
+            return () => {
+                socket.off('guestRegistered');
+                socket.emit('leaveEvent', eventId);
+            };
+        }
+    }, [socket, eventId]);
 
     // Fetch event details and guests on component mount
     useEffect(() => {
@@ -168,8 +224,25 @@ const GuestManagementPage = () => {
         navigate(`/events/${eventId}/tables`);
     };
 
+    // Generate a shareable registration link for this event
+    const getRegistrationLink = () => {
+        const baseUrl = window.location.origin;
+        return `${baseUrl}/event/${eventId}/register`;
+    };
+    
+    // Copy registration link to clipboard
+    const copyRegistrationLink = () => {
+        const link = getRegistrationLink();
+        navigator.clipboard.writeText(link);
+        toast.info('Registration link copied to clipboard!', {
+            position: "top-right",
+            autoClose: 3000
+        });
+    };
+    
     return (
         <Container>
+            <ToastContainer />
             {loading ? (
                 <div className="text-center my-5">
                     <div className="spinner-border" role="status">
@@ -199,6 +272,9 @@ const GuestManagementPage = () => {
                         </Col>
                         <Col className="text-end">
                             <Button variant="primary" onClick={openAddModal} className="me-2">Add Guest</Button>
+                            <Button variant="info" onClick={copyRegistrationLink} className="me-2">
+                                <i className="bi bi-link"></i> Copy Registration Link
+                            </Button>
                             {/*<Button variant="success" onClick={goToTableManagement}>Manage Tables</Button>*/}
                         </Col>
                     </Row>
