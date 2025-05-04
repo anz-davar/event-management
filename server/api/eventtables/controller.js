@@ -30,7 +30,8 @@ const assignTableToEvent = async (req, res) => {
 // Remove a table from an event
 const removeTableFromEvent = async (req, res) => {
   try {
-    const { EventID, TableID } = req.body;
+    const EventID = req.params.eventId;
+    const TableID = req.params.tableId;
     if (!EventID || !TableID) return res.status(400).json({ success: false, error: 'EventID and TableID required' });
     const result = await service.removeTableFromEvent(EventID, TableID);
     if (result.error) return res.status(400).json({ success: false, error: result.error });

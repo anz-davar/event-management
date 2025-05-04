@@ -8,6 +8,6 @@ router.get('/:eventId', authenticateToken, controller.getEventTables);
 // Assign a table to an event
 router.post('/', authenticateToken, controller.assignTableToEvent);
 // Remove a table from an event
-router.delete('/', authenticateToken, controller.removeTableFromEvent);
+router.delete('/:eventId/:tableId', authenticateToken, controller.removeTableFromEvent);
 
 module.exports = router;

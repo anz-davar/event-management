@@ -26,8 +26,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public guest registration route without navbar */}
+          {/* Public guest registration routes without navbar */}
           <Route path="/event/:eventId/register" element={<PublicGuestRegistrationPage />} />
+          <Route path="/register/:eventId" element={<PublicGuestRegistrationPage />} />
           
           {/* All other routes with navbar */}
           <Route path="/" element={

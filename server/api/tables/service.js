@@ -34,13 +34,13 @@ const addTable = async (table) => {
   try {
     conn = await pool.getConnection();
     const [result] = await conn.query(
-      "INSERT INTO tables (HallID, MaxSeats, TableLocation) VALUES (?, ?, ?)",
-      [table.HallID, table.MaxSeats, table.TableLocation]
+      "INSERT INTO tables (TableName, MaxSeats, IsAccessible) VALUES (?, ?, ?)",
+      [table.TableName, table.MaxSeats, table.IsAccessible || 0]
     );
-    return result; // result.insertId
+    return { success: true, insertId: result.insertId };
   } catch (error) {
     console.log(error);
-    return null;
+    return { success: false, error: error.message };
   } finally {
     if (conn) conn.release();
   }
@@ -67,8 +67,8 @@ const updateTable = async (tableID, table) => {
   try {
     conn = await pool.getConnection();
     const [result] = await conn.query(
-      "UPDATE tables SET HallID = ?, MaxSeats = ?, TableLocation = ? WHERE TableID = ?",
-      [table.HallID, table.MaxSeats, table.TableLocation, tableID]
+      "UPDATE tables SET HallID = ?, MaxSeats = ?, TableLocation = ?, IsAccessible = ? WHERE TableID = ?",
+      [table.HallID, table.MaxSeats, table.TableLocation, table.IsAccessible || 0, tableID]
     );
     return result.affectedRows > 0;
   } catch (error) {

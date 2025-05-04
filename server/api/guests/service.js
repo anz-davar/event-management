@@ -50,18 +50,58 @@ const getGuests = async () => {
 };
 
 //add guest
-const addGuest = async (guest) => {
+const addGuest = async (guestData) => {
   let conn;
   try {
     conn = await pool.getConnection();
+    const { EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable } = guestData;
     const [result] = await conn.query(
-      "INSERT INTO guests (EventID, FullName, ContactInfo, Preferences, Restrictions) VALUES (?, ?, ?, ?, ?)",
-      [guest.EventID, guest.FullName, guest.ContactInfo, guest.Preferences, guest.Restrictions]
+      'INSERT INTO guests (EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable) VALUES (?, ?, ?, ?, ?, ?)',
+      [EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable || 0]
     );
-    return result; // result.insertId
+    return result;
   } catch (error) {
-    console.log(error);
-    return null;
+    console.error('Error adding guest:', error);
+    throw error;
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
+// Add multiple family members in a single transaction
+const addFamilyGuests = async (familyMembers) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    
+    const insertedGuests = [];
+    
+    // Insert each family member
+    for (const member of familyMembers) {
+      const { EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable } = member;
+      const [result] = await conn.query(
+        'INSERT INTO guests (EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable) VALUES (?, ?, ?, ?, ?, ?)',
+        [EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable || 0]
+      );
+      
+      insertedGuests.push({
+        GuestID: result.insertId,
+        EventID,
+        FullName,
+        ContactInfo,
+        Preferences,
+        Restrictions,
+        NeedsAccessibleTable: NeedsAccessibleTable || 0
+      });
+    }
+    
+    await conn.commit();
+    return { success: true, guests: insertedGuests };
+  } catch (error) {
+    if (conn) await conn.rollback();
+    console.error('Error adding family guests:', error);
+    throw error;
   } finally {
     if (conn) conn.release();
   }
@@ -73,8 +113,8 @@ const updateGuest = async (guest) => {
   try {
     conn = await pool.getConnection();
     const [result] = await conn.query(
-      "UPDATE guests SET EventID=?, FullName=?, ContactInfo=?, Preferences=?, Restrictions=? WHERE GuestID = ?",
-      [guest.EventID, guest.FullName, guest.ContactInfo, guest.Preferences, guest.Restrictions, guest.GuestID]
+      "UPDATE guests SET EventID=?, FullName=?, ContactInfo=?, Preferences=?, Restrictions=?, NeedsAccessibleTable=? WHERE GuestID = ?",
+      [guest.EventID, guest.FullName, guest.ContactInfo, guest.Preferences, guest.Restrictions, guest.NeedsAccessibleTable || 0, guest.GuestID]
     );
     return result.affectedRows > 0;
   } catch (error) {
@@ -120,6 +160,7 @@ module.exports = {
   getGuests,
   getGuestsByEventId,
   addGuest,
+  addFamilyGuests,
   updateGuest,
   deleteGuest,
   checkEventExists,

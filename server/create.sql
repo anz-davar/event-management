@@ -109,3 +109,5 @@ ALTER TABLE `event_tables`
             REFERENCES `tables` (`TableID`)
             ON DELETE CASCADE;
 
+ALTER TABLE tables ADD COLUMN IsAccessible BOOLEAN DEFAULT 0;
+ALTER TABLE guests ADD COLUMN NeedsAccessibleTable BOOLEAN DEFAULT 0;

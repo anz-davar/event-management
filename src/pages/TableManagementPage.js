@@ -5,10 +5,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const TableManagementPage = () => {
     const { eventId } = useParams();
-const [hallId, setHallId] = useState(null);
+    const [hallId, setHallId] = useState(null);
     useNavigate();
     const [tables, setTables] = useState([]);
-const [eventTables, setEventTables] = useState([]); // Tables assigned to this event
+    const [eventTables, setEventTables] = useState([]); // Tables assigned to this event
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [event, setEvent] = useState(null);
@@ -17,6 +17,7 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
     const [currentTable, setCurrentTable] = useState(null);
     const [maxSeats, setMaxSeats] = useState('');
     const [tableLocation, setTableLocation] = useState('');
+    const [isAccessible, setIsAccessible] = useState(false);
     const [success, setSuccess] = useState('');
 
     useEffect(() => {
@@ -56,7 +57,8 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
             const tableData = {
                 HallID: hallId,
                 MaxSeats: parseInt(maxSeats),
-                TableLocation: tableLocation
+                TableLocation: tableLocation,
+                IsAccessible: isAccessible ? 1 : 0
             };
             const response = await axios.post('/api/tables', tableData);
             if (response.data.success) {
@@ -80,7 +82,8 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
                 TableID: currentTable.TableID,
                 HallID: hallId,
                 MaxSeats: parseInt(maxSeats),
-                TableLocation: tableLocation
+                TableLocation: tableLocation,
+                IsAccessible: isAccessible ? 1 : 0
             };
             const response = await axios.put(`/api/tables/${currentTable.TableID}`, tableData);
             if (response.data.success) {
@@ -118,50 +121,49 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
     const openAddModal = () => {
         setMaxSeats('');
         setTableLocation('');
+        setIsAccessible(false);
         setShowAddModal(true);
     };
     const closeAddModal = () => setShowAddModal(false);
     const openEditModal = (table) => {
         setCurrentTable(table);
-        setMaxSeats(table.MaxSeats);
+        setMaxSeats(table.MaxSeats.toString());
         setTableLocation(table.TableLocation);
+        setIsAccessible(table.IsAccessible === 1);
         setShowEditModal(true);
     };
     const closeEditModal = () => {
         setShowEditModal(false);
-        setCurrentTable(null);
     };
 
     const renderSeats = (count, color = '#2d7af6') => {
-        const dots = [];
-        const radius = 48;
-        const dotRadius = 5;
+        const seats = [];
         for (let i = 0; i < count; i++) {
-            const angle = (2 * Math.PI * i) / count;
-            const x = 50 + radius * Math.cos(angle);
-            const y = 50 + radius * Math.sin(angle);
-            dots.push(<circle key={i} cx={x} cy={y} r={dotRadius} fill={color} />);
+            seats.push(
+                <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color, margin: '2px' }} />
+            );
         }
-        return dots;
+        return <div style={{ display: 'flex', flexWrap: 'wrap', maxWidth: '100px' }}>{seats}</div>;
     };
 
     const TableSketch = ({ table, isReserve }) => {
-        const seats = table.MaxSeats || 8;
-        const color = isReserve ? '#f66' : '#2d7af6';
-        const tableShape = table.Shape === 'square'
-            ? <rect x="25" y="25" width="50" height="50" rx="10" fill="#fff" stroke={color} strokeWidth="3" />
-            : <circle cx="50" cy="50" r="40" fill="#fff" stroke={color} strokeWidth="3" />;
+        const color = isReserve ? '#28a745' : '#2d7af6';
         return (
-            <svg width="110" height="110" style={{ margin: 12, display: 'block' }}>
-                {renderSeats(seats, color)}
-                {tableShape}
-                <text x="50" y="58" textAnchor="middle" fontWeight="bold" fontSize="12" fill="#222">
-                    {isReserve ? 'Reserve' : `Table ${table.TableNumber}(${table.TableID})`}
-                </text>
-                <text x="50" y="74" textAnchor="middle" fontSize="10" fill="#444">
-                    ({seats} seats)
-                </text>
-            </svg>
+            <div
+                style={{
+                    width: '100px',
+                    height: '60px',
+                    backgroundColor: color,
+                    borderRadius: '5px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                }}
+            >
+                {table.TableLocation}
+            </div>
         );
     };
 
@@ -169,82 +171,89 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
     const handleToggleTableAssignment = async (tableId, checked) => {
         try {
             if (checked) {
-                await axios.post('/api/eventtables', { EventID: parseInt(eventId), TableID: tableId });
+                // Assign table to event
+                await axios.post('/api/eventtables', { EventID: eventId, TableID: tableId });
             } else {
-                await axios.delete('/api/eventtables', { data: { EventID: parseInt(eventId), TableID: tableId } });
+                // Unassign table from event
+                await axios.delete(`/api/eventtables/${eventId}/${tableId}`);
             }
-            // Refresh eventTables
+            // Refresh event tables
             const eventTablesResponse = await axios.get(`/api/eventtables/${eventId}`);
             setEventTables(eventTablesResponse.data.data.map(et => et.TableID) || []);
         } catch (error) {
+            console.error('Error toggling table assignment:', error);
             setError('Failed to update table assignment');
         }
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#fff', padding: '32px 0' }}>
-            <Container>
-                <h2 className="text-center fw-bold mb-5" style={{ fontSize: '2rem' }}>
-                    Table Management
-                </h2>
+        <div>
+            <Container className="mt-4">
+                <h1>Table Management</h1>
+                {error && <Alert variant="danger">{error}</Alert>}
+                {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 12, minHeight: 350 }}>
-                    {tables.map((table, idx) => (
-                        <div key={table.TableID || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <TableSketch table={{ ...table, TableNumber: idx + 1 }} />
-                            <Form.Check
-                                type="checkbox"
-                                label="Use for Event"
-                                checked={eventTables.includes(table.TableID)}
-                                onChange={e => handleToggleTableAssignment(table.TableID, e.target.checked)}
-                                style={{ marginTop: 8 }}
-                            />
-                        </div>
-                    ))}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 40 }}>
-                        <TableSketch table={{ TableNumber: '', MaxSeats: 10, Shape: 'circle' }} isReserve />
-                    </div>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Tables for {event?.EventName}</h2>
+                    <Button variant="primary" onClick={openAddModal}>Add New Table</Button>
                 </div>
 
-                <div className="d-flex justify-content-center gap-4 mt-4">
-                    {/*<Button style={{ borderRadius: 20, background: '#111', border: 'none', minWidth: 100, fontWeight: 600 }}>*/}
-                    {/*    Send*/}
-                    {/*</Button>*/}
-                    {/*<Button style={{ borderRadius: 20, background: '#111', border: 'none', minWidth: 100, fontWeight: 600 }}>*/}
-                    {/*    Update*/}
-                    {/*</Button>*/}
+                <div className="mb-4">
+                    <h3>Assign Tables to Event</h3>
+                    <Row>
+                        {tables.map(table => (
+                            <Col key={table.TableID} xs={12} md={6} lg={4} className="mb-3">
+                                <Card>
+                                    <Card.Body className="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <TableSketch table={table} isReserve={eventTables.includes(table.TableID)} />
+                                            <div>
+                                                <strong>Seats:</strong> {table.MaxSeats}
+                                            </div>
+                                            <div>
+                                                <strong>Location:</strong> {table.TableLocation}
+                                            </div>
+                                            <div>
+                                                <strong>Wheelchair Accessible:</strong> {table.IsAccessible === 1 ? 'Yes' : 'No'}
+                                            </div>
+                                        </div>
+                                        <Form.Check
+                                            type="switch"
+                                            id={`table-switch-${table.TableID}`}
+                                            label="Assign to Event"
+                                            checked={eventTables.includes(table.TableID)}
+                                            onChange={(e) => handleToggleTableAssignment(table.TableID, e.target.checked)}
+                                        />
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
                 </div>
 
-                {/* Add Table Button - always visible */}
-                <div className="d-flex justify-content-end mb-3">
-                    <Button variant="primary" onClick={openAddModal} style={{ fontWeight: 600, borderRadius: 20 }}>Add Table</Button>
-                </div>
-                <div className="mt-5">
-                    {tables.length === 0 ? (
-                        <Card className="text-center p-5">
-                            <Card.Body>
-                                <h4>No tables added yet</h4>
-                                <p>Start by adding tables to your event</p>
-                                <Button variant="primary" onClick={openAddModal}>Add First Table</Button>
-                            </Card.Body>
-                        </Card>
+                <div>
+                    <h3>All Tables</h3>
+                    {loading ? (
+                        <p>Loading tables...</p>
                     ) : (
-                        <Table striped bordered hover responsive>
+                        <Table striped bordered hover>
                             <thead>
-                            <tr>
-                                <th>Table #</th>
-                                <th>Capacity</th>
-                                <th>Location</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Seats</th>
+                                    <th>Location</th>
+                                    <th>Wheelchair Accessible</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            {tables.map((table) => (
+                            {tables.map((table, index) => (
                                 <tr key={table.TableID}>
-                                    <td>{table.TableID}</td>
+                                    <td>{index + 1}</td>
                                     <td>{table.MaxSeats} seats</td>
                                     <td>{table.TableLocation}</td>
+                                    <td>{table.IsAccessible === 1 ? 'Yes' : 'No'}</td>
                                     <td>
                                         {table.OccupiedSeats
                                             ? `${table.OccupiedSeats}/${table.MaxSeats} occupied`
@@ -294,6 +303,17 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
                                 required
                             />
                         </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                label="Wheelchair Accessible Table"
+                                checked={isAccessible}
+                                onChange={(e) => setIsAccessible(e.target.checked)}
+                            />
+                            <Form.Text className="text-muted">
+                                Check this if the table is accessible for guests with wheelchairs
+                            </Form.Text>
+                        </Form.Group>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={closeAddModal}>Cancel</Button>
@@ -329,6 +349,17 @@ const [eventTables, setEventTables] = useState([]); // Tables assigned to this e
                                 onChange={(e) => setTableLocation(e.target.value)}
                                 required
                             />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                label="Wheelchair Accessible Table"
+                                checked={isAccessible}
+                                onChange={(e) => setIsAccessible(e.target.checked)}
+                            />
+                            <Form.Text className="text-muted">
+                                Check this if the table is accessible for guests with wheelchairs
+                            </Form.Text>
                         </Form.Group>
                     </Modal.Body>
                     <Modal.Footer>
