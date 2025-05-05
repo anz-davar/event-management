@@ -29,7 +29,8 @@ const getTablesByHallId = async (req, res) => {
 // Add a new table
 const addTable = async (req, res) => {
   try {
-    const { HallID, MaxSeats, TableLocation } = req.body;
+    const { HallID, MaxSeats, TableLocation, IsAccessible } = req.body;
+    console.log(req.body)
     if (!HallID || !MaxSeats) {
       return res.status(400).json({ success: false, error: "HallID and MaxSeats are required" });
     }

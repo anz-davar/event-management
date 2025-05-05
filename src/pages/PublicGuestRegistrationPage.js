@@ -76,8 +76,8 @@ const PublicGuestRegistrationPage = () => {
 
     // Handle changes to a family member's data
     const handleFamilyMemberChange = (id, field, value) => {
-        setFamilyMembers(prev => 
-            prev.map(member => 
+        setFamilyMembers(prev =>
+            prev.map(member =>
                 member.id === id ? { ...member, [field]: value } : member
             )
         );
@@ -86,7 +86,7 @@ const PublicGuestRegistrationPage = () => {
     // Handle submitting the family registration
     const handleFamilyRegistration = async (e) => {
         e.preventDefault();
-        
+
         // Validate form
         if (!contactInfo.trim()) {
             setError('Contact information is required');
@@ -114,27 +114,28 @@ const PublicGuestRegistrationPage = () => {
 
             // Submit all family members
             const response = await axios.post('/api/guests/public/family', guestDataArray);
-            
+
             if (response.data.success) {
-                setSuccess(`Thank you for registering your family! ${familyMembers.length} guests have been registered.`);
+                setSuccess('Thank you for registering! Your family has been added to the guest list.');
                 setSubmitted(true);
                 // Reset form
                 setContactInfo('');
                 setFamilyMembers([
                     {
-                        id: 1,
+                        id: Date.now(),
                         fullName: '',
                         preferences: '',
                         restrictions: '',
                         needsAccessibleTable: false
                     }
                 ]);
+                setError('');
             } else {
-                setError(response.data.error || 'Failed to register');
+                setError(response.data.error || 'Failed to register. Please try again.');
             }
         } catch (error) {
             console.error('Error registering family:', error);
-            setError(error.response?.data?.error || 'Failed to register. Please try again later.');
+            setError('Failed to register. Please try again later.');
         }
     };
 
@@ -142,61 +143,58 @@ const PublicGuestRegistrationPage = () => {
     const renderThankYou = () => (
         <Card className="text-center p-5 my-5">
             <Card.Body>
-                <h2 className="text-success mb-4">Family Registration Confirmed!</h2>
-                <p className="mb-4">Thank you for registering your family for {event?.EventName}.</p>
-                <p className="mb-4">We look forward to seeing you on {new Date(event?.EventDate).toLocaleDateString()}.</p>
-                <p className="mb-4">Your family members will be seated together at the same table.</p>
-                <Button variant="primary" onClick={() => setSubmitted(false)}>Register Another Family</Button>
+                <h2 className="text-success mb-4">Registration Successful!</h2>
+                <p className="lead">Thank you for registering for {event.EventName}!</p>
+                <p>We look forward to seeing you at the event.</p>
+                <Button
+                    variant="outline-primary"
+                    onClick={() => setSubmitted(false)}
+                    className="mt-3"
+                >
+                    Register Another Family
+                </Button>
             </Card.Body>
         </Card>
     );
 
     // Render the registration form for family members
     const renderRegistrationForm = () => (
-        <Card className="p-4 my-4">
+        <Card className="mb-5">
             <Card.Body>
-                <h3 className="mb-4">Family Registration</h3>
-                <p className="text-muted mb-4">
-                    Register multiple family members at once. Family members will be seated together at the same table.
-                </p>
-                
+                <h2 className="mb-4">Family Registration</h2>
                 <Form onSubmit={handleFamilyRegistration}>
-                    {/* Shared contact information for all family members */}
                     <Form.Group className="mb-4">
-                        <Form.Label><strong>Family Contact Information</strong></Form.Label>
+                        <Form.Label>Contact Information (for all family members)</Form.Label>
                         <Form.Control
                             type="text"
-                            placeholder="Phone number or email for the entire family"
+                            placeholder="Phone number or email"
                             value={contactInfo}
                             onChange={(e) => setContactInfo(e.target.value)}
                             required
                         />
                         <Form.Text className="text-muted">
-                            This contact information will be shared for all family members and used to group you together.
+                            This will be used as the contact information for all family members
                         </Form.Text>
                     </Form.Group>
-                    
-                    <hr className="my-4" />
-                    
-                    <h4 className="mb-3">Family Members</h4>
-                    
-                    {/* Family members section */}
+
+                    <h3 className="mb-3">Family Members</h3>
+
                     {familyMembers.map((member, index) => (
-                        <div key={member.id} className="family-member-section p-3 mb-4" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="mb-0">Family Member {index + 1}</h5>
-                                {familyMembers.length > 1 && (
-                                    <Button 
-                                        variant="outline-danger" 
-                                        size="sm" 
-                                        onClick={() => handleRemoveFamilyMember(member.id)}
-                                        aria-label="Remove family member"
-                                    >
-                                        <FaTrash /> Remove
-                                    </Button>
-                                )}
-                            </div>
-                            
+                        <div key={member.id} className="p-3 border rounded mb-4 position-relative">
+                            <h4 className="mb-3">Family Member {index + 1}</h4>
+
+                            {/* Remove button for additional family members */}
+                            {familyMembers.length > 1 && (
+                                <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => handleRemoveFamilyMember(member.id)}
+                                    className="position-absolute top-0 end-0 m-2"
+                                >
+                                    <FaTrash />
+                                </Button>
+                            )}
+
                             <Form.Group className="mb-3">
                                 <Form.Label>Full Name</Form.Label>
                                 <Form.Control
@@ -207,34 +205,32 @@ const PublicGuestRegistrationPage = () => {
                                     required
                                 />
                             </Form.Group>
-                            
-                            <Row>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Preferences</Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={2}
-                                            placeholder="Special preferences (e.g., vegetarian meal)"
-                                            value={member.preferences}
-                                            onChange={(e) => handleFamilyMemberChange(member.id, 'preferences', e.target.value)}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Restrictions</Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={2}
-                                            placeholder="Dietary restrictions or seating constraints"
-                                            value={member.restrictions}
-                                            onChange={(e) => handleFamilyMemberChange(member.id, 'restrictions', e.target.value)}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Preferences</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={2}
+                                    placeholder="Special preferences (e.g., vegetarian meal)"
+                                    value={member.preferences}
+                                    onChange={(e) => handleFamilyMemberChange(member.id, 'preferences', e.target.value)}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Restrictions</Form.Label>
+                                <Form.Select
+                                    value={member.restrictions}
+                                    onChange={(e) => handleFamilyMemberChange(member.id, 'restrictions', e.target.value)}
+                                >
+                                    <option value="">Select a restriction</option>
+                                    <option value="near stage">Near Stage</option>
+                                    <option value="center">Center</option>
+                                    <option value="front">Front</option>
+                                    <option value="back">Back</option>
+                                </Form.Select>
+                            </Form.Group>
+
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
@@ -248,18 +244,18 @@ const PublicGuestRegistrationPage = () => {
                             </Form.Group>
                         </div>
                     ))}
-                    
+
                     {/* Add family member button */}
                     <div className="d-grid mb-4">
-                        <Button 
-                            variant="outline-primary" 
+                        <Button
+                            variant="outline-primary"
                             onClick={handleAddFamilyMember}
                             className="d-flex align-items-center justify-content-center gap-2"
                         >
                             <FaPlus /> Add Another Family Member
                         </Button>
                     </div>
-                    
+
                     <div className="d-grid gap-2 mt-4">
                         <Button variant="primary" type="submit" size="lg">
                             Register Family ({familyMembers.length} {familyMembers.length === 1 ? 'person' : 'people'})
@@ -271,8 +267,8 @@ const PublicGuestRegistrationPage = () => {
     );
 
     return (
-        <div style={{ 
-            minHeight: '100vh', 
+        <div style={{
+            minHeight: '100vh',
             background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
             padding: '40px 0'
         }}>

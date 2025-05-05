@@ -29,7 +29,7 @@ const GuestManagementPage = () => {
 
     // Socket.io connection
     const [socket, setSocket] = useState(null);
-    
+
     // Set up socket connection
     useEffect(() => {
         const newSocket = io();
@@ -61,7 +61,7 @@ const GuestManagementPage = () => {
                     pauseOnHover: true,
                     draggable: true,
                 });
-                
+
                 // Refresh the guest list
                 fetchEventAndGuests();
             }
@@ -78,7 +78,7 @@ const GuestManagementPage = () => {
                     pauseOnHover: true,
                     draggable: true,
                 });
-                
+
                 // Refresh the guest list
                 fetchEventAndGuests();
             }
@@ -379,13 +379,16 @@ const GuestManagementPage = () => {
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Restrictions</Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={2}
-                                            placeholder="Dietary restrictions or seating constraints"
+                                        <Form.Select
                                             value={restrictions}
                                             onChange={(e) => setRestrictions(e.target.value)}
-                                        />
+                                        >
+                                            <option value="">Select a restriction</option>
+                                            <option value="near stage">Near Stage</option>
+                                            <option value="center">Center</option>
+                                            <option value="front">Front</option>
+                                            <option value="back">Back</option>
+                                        </Form.Select>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Check
@@ -445,13 +448,16 @@ const GuestManagementPage = () => {
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Restrictions</Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={2}
-                                            placeholder="Dietary restrictions or seating constraints"
+                                        <Form.Select
                                             value={restrictions}
                                             onChange={(e) => setRestrictions(e.target.value)}
-                                        />
+                                        >
+                                            <option value="">Select a restriction</option>
+                                            <option value="near stage">Near Stage</option>
+                                            <option value="center">Center</option>
+                                            <option value="front">Front</option>
+                                            <option value="back">Back</option>
+                                        </Form.Select>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Check

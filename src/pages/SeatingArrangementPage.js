@@ -167,12 +167,12 @@ const SeatingArrangementPage = () => {
 
     // Navigate to table management page
     const goToTableManagement = () => {
-        navigate(`/events/${eventId}/tables`);
+        navigate(`/tables/${eventId}`);
     };
 
     // Navigate to guest management page
     const goToGuestManagement = () => {
-        navigate(`/events/${eventId}/guests`);
+        navigate(`/guests/${eventId}`);
     };
 
     // Helper function to get guest name by ID

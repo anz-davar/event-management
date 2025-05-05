@@ -238,14 +238,14 @@ const TableManagementPage = () => {
                     ) : (
                         <Table striped bordered hover>
                             <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Seats</th>
-                                    <th>Location</th>
-                                    <th>Wheelchair Accessible</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
+                            <tr>
+                                <th>#</th>
+                                <th>Seats</th>
+                                <th>Location</th>
+                                <th>Wheelchair Accessible</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
                             {tables.map((table, index) => (
@@ -295,13 +295,17 @@ const TableManagementPage = () => {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Table Location</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder="e.g. Front, Back, Near stage"
+                            <Form.Select
                                 value={tableLocation}
                                 onChange={(e) => setTableLocation(e.target.value)}
                                 required
-                            />
+                            >
+                                <option value="">Select a location</option>
+                                <option value="near stage">Near Stage</option>
+                                <option value="center">Center</option>
+                                <option value="front">Front</option>
+                                <option value="back">Back</option>
+                            </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Check
@@ -342,13 +346,17 @@ const TableManagementPage = () => {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Table Location</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder="e.g. Front, Back, Near stage"
+                            <Form.Select
                                 value={tableLocation}
                                 onChange={(e) => setTableLocation(e.target.value)}
                                 required
-                            />
+                            >
+                                <option value="">Select a location</option>
+                                <option value="near stage">Near Stage</option>
+                                <option value="center">Center</option>
+                                <option value="front">Front</option>
+                                <option value="back">Back</option>
+                            </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Check
