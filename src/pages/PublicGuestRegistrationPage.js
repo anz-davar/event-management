@@ -272,10 +272,10 @@ const PublicGuestRegistrationPage = () => {
     const renderRegistrationForm = () => (
         <Card className="mb-5">
             <Card.Body>
-                <h2 className="mb-4">Family Registration</h2>
+                <h2 className="mb-4">Guest Registration</h2>
                 <Form onSubmit={handleFamilyRegistration}>
                     <Form.Group className="mb-4">
-                        <Form.Label>Contact Information (for all family members)</Form.Label>
+                        <Form.Label>Contact Information (for all Guests)</Form.Label>
                         <Form.Control
                             type="text"
                             placeholder="Phone number or email"
@@ -288,11 +288,11 @@ const PublicGuestRegistrationPage = () => {
                         </Form.Text>
                     </Form.Group>
 
-                    <h3 className="mb-3">Family Members</h3>
+                    <h3 className="mb-3">Guests Members</h3>
 
                     {familyMembers.map((member, index) => (
                         <div key={member.id} className="p-3 border rounded mb-4 position-relative">
-                            <h4 className="mb-3">Family Member {index + 1}</h4>
+                            <h4 className="mb-3">Guest {index + 1}</h4>
 
                             {/* Remove button for additional family members */}
                             {familyMembers.length > 1 && (
@@ -350,7 +350,7 @@ const PublicGuestRegistrationPage = () => {
                                     onChange={(e) => handleFamilyMemberChange(member.id, 'needsAccessibleTable', e.target.checked)}
                                 />
                                 <Form.Text className="text-muted">
-                                    Check this if this family member needs to be seated at a wheelchair accessible table
+                                    Check this if this guest  needs to be seated at a wheelchair accessible table
                                 </Form.Text>
                             </Form.Group>
                         </div>
@@ -363,13 +363,13 @@ const PublicGuestRegistrationPage = () => {
                             onClick={handleAddFamilyMember}
                             className="d-flex align-items-center justify-content-center gap-2"
                         >
-                            <FaPlus /> Add Another Family Member
+                            <FaPlus /> Add Another Guest
                         </Button>
                     </div>
 
                     <div className="d-grid gap-2 mt-4">
                         <Button variant="primary" type="submit" size="lg">
-                            Register Family ({familyMembers.length} {familyMembers.length === 1 ? 'person' : 'people'})
+                            Register guests ({familyMembers.length} {familyMembers.length === 1 ? 'person' : 'people'})
                         </Button>
                     </div>
                 </Form>
