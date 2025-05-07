@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Alert, Card, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaPlus, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
 
 const PublicGuestRegistrationPage = () => {
     const { eventId } = useParams();
@@ -26,6 +26,13 @@ const PublicGuestRegistrationPage = () => {
             needsAccessibleTable: false
         }
     ]);
+
+    // States for table lookup
+    const [lookupContactInfo, setLookupContactInfo] = useState('');
+    const [tableAssignments, setTableAssignments] = useState([]);
+    const [lookupError, setLookupError] = useState('');
+    const [lookupSuccess, setLookupSuccess] = useState('');
+    const [loadingTables, setLoadingTables] = useState(false);
 
     // Fetch event details on component mount
     useEffect(() => {
@@ -52,6 +59,50 @@ const PublicGuestRegistrationPage = () => {
 
         fetchEvent();
     }, [eventId]);
+
+    // Handle looking up table assignments
+    const handleTableLookup = async (e) => {
+        e.preventDefault();
+
+        // Reset states
+        setLookupError('');
+        setLookupSuccess('');
+        setTableAssignments([]);
+
+        // Validate input
+        if (!lookupContactInfo.trim()) {
+            setLookupError('Please enter a phone number or email');
+            return;
+        }
+
+        try {
+            setLoadingTables(true);
+            const response = await axios.get(`/api/guests/public/tables`, {
+                params: {
+                    eventId,
+                    contactInfo: lookupContactInfo
+                }
+            });
+
+            if (response.data.success) {
+                const assignments = response.data.data;
+                setTableAssignments(assignments);
+
+                if (assignments.length > 0) {
+                    setLookupSuccess('Table assignments found!');
+                } else {
+                    setLookupError('No table assignments found for this contact information');
+                }
+            } else {
+                setLookupError(response.data.error || 'Failed to retrieve table assignments');
+            }
+        } catch (error) {
+            console.error('Error looking up table:', error);
+            setLookupError('Failed to retrieve table assignments. Please try again later.');
+        } finally {
+            setLoadingTables(false);
+        }
+    };
 
     // Handle adding a new family member to the form
     const handleAddFamilyMember = () => {
@@ -153,6 +204,66 @@ const PublicGuestRegistrationPage = () => {
                 >
                     Register Another Family
                 </Button>
+            </Card.Body>
+        </Card>
+    );
+
+    // Render table lookup form
+    const renderTableLookup = () => (
+        <Card className="mb-5">
+            <Card.Body>
+                <h2 className="mb-4">Find Your Table</h2>
+                <p>Enter your phone number or email to find your table assignment.</p>
+
+                <Form onSubmit={handleTableLookup}>
+                    <Form.Group className="mb-3">
+                        <InputGroup>
+                            <Form.Control
+                                type="text"
+                                placeholder="Phone number or email"
+                                value={lookupContactInfo}
+                                onChange={(e) => setLookupContactInfo(e.target.value)}
+                                required
+                            />
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={loadingTables}
+                            >
+                                {loadingTables ? 'Looking up...' : <><FaSearch className="me-2" /> Find My Table</>}
+                            </Button>
+                        </InputGroup>
+                    </Form.Group>
+                </Form>
+
+                {lookupError && <Alert variant="danger" className="mt-3">{lookupError}</Alert>}
+                {lookupSuccess && <Alert variant="success" className="mt-3">{lookupSuccess}</Alert>}
+
+                {tableAssignments.length > 0 && (
+                    <div className="mt-4">
+                        <h3>Your Table Assignments</h3>
+                        <div className="table-responsive">
+                            <table className="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Guest</th>
+                                    <th>Table Number</th>
+                                    <th>Table Location</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {tableAssignments.map((assignment, index) => (
+                                    <tr key={index}>
+                                        <td>{assignment.FullName}</td>
+                                        <td>{assignment.TableID}</td>
+                                        <td>{assignment.TableLocation || 'N/A'}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </Card.Body>
         </Card>
     );
@@ -299,6 +410,9 @@ const PublicGuestRegistrationPage = () => {
                                         )}
                                     </Card.Body>
                                 </Card>
+
+                                {/* Table Lookup Feature */}
+                                {renderTableLookup()}
 
                                 {submitted ? renderThankYou() : renderRegistrationForm()}
                             </>

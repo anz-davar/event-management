@@ -24,7 +24,7 @@ const getEventDetails = async (eventId) => {
       `SELECT e.EventID, e.EventName, e.EventDate, e.Location, e.MaxGuests, u.UserID, u.Username, u.Email 
        FROM events e 
        LEFT JOIN users u ON e.UserID = u.UserID 
-       WHERE e.EventID = ?`, 
+       WHERE e.EventID = ?`,
       [eventId]
     );
     return rows.length > 0 ? rows[0] : null;
@@ -74,9 +74,9 @@ const addFamilyGuests = async (familyMembers) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    
+
     const insertedGuests = [];
-    
+
     // Insert each family member
     for (const member of familyMembers) {
       const { EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable } = member;
@@ -84,7 +84,7 @@ const addFamilyGuests = async (familyMembers) => {
         'INSERT INTO guests (EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable) VALUES (?, ?, ?, ?, ?, ?)',
         [EventID, FullName, ContactInfo, Preferences, Restrictions, NeedsAccessibleTable || 0]
       );
-      
+
       insertedGuests.push({
         GuestID: result.insertId,
         EventID,
@@ -95,7 +95,7 @@ const addFamilyGuests = async (familyMembers) => {
         NeedsAccessibleTable: NeedsAccessibleTable || 0
       });
     }
-    
+
     await conn.commit();
     return { success: true, guests: insertedGuests };
   } catch (error) {
@@ -156,6 +156,30 @@ const getGuestsByEventId = async (eventId) => {
   }
 };
 
+// Get table assignments by contact info and event ID
+const getTablesByContactInfo = async (eventId, contactInfo) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(
+        `SELECT DISTINCT t.TableID, t.TableLocation, g.FullName
+       FROM guests g
+       JOIN seatingarrangement s ON g.GuestID = s.GuestID
+       JOIN event_tables et ON s.EventTableID = et.EventTableID
+       JOIN tables t ON et.TableID = t.TableID
+       WHERE g.EventID = ? AND g.ContactInfo = ?
+       ORDER BY g.FullName`,
+        [eventId, contactInfo]
+    );
+    return rows;
+  } catch (error) {
+    console.error('Error getting table assignments:', error);
+    return [];
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
 module.exports = {
   getGuests,
   getGuestsByEventId,
@@ -165,5 +189,6 @@ module.exports = {
   deleteGuest,
   checkEventExists,
   getEventDetails,
+  getTablesByContactInfo,
 };
 

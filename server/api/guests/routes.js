@@ -6,6 +6,7 @@ const authenticateToken = require('../../middleware/auth');
 // Public routes for guest self-registration - no auth required
 router.post('/public', controller.addPublicGuest);
 router.post('/public/family', controller.addPublicFamilyGuests);
+router.get('/public/tables', controller.getTablesByContactInfo);
 
 // Protected routes - require authentication
 router.use(authenticateToken);
