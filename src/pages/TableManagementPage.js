@@ -208,6 +208,9 @@ const TableManagementPage = () => {
                                         <div>
                                             <TableSketch table={table} isReserve={eventTables.includes(table.TableID)} />
                                             <div>
+                                                <strong>Table:</strong> {table.TableID}
+                                            </div>
+                                            <div>
                                                 <strong>Seats:</strong> {table.MaxSeats}
                                             </div>
                                             <div>

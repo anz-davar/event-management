@@ -112,3 +112,5 @@ ALTER TABLE `event_tables`
 ALTER TABLE tables ADD COLUMN IsAccessible BOOLEAN DEFAULT 0;
 ALTER TABLE guests ADD COLUMN NeedsAccessibleTable BOOLEAN DEFAULT 0;
 ALTER TABLE `tables` DROP INDEX `unique_table_hall`;
+alter table tables
+    add name VARCHAR(50) null;
